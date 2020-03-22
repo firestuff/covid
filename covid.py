@@ -72,6 +72,7 @@ class Snapshot:
 
 
 states = {}
+latest = datetime.datetime.utcfromtimestamp(0)
 
 
 def LoadPopulations():
@@ -81,6 +82,8 @@ def LoadPopulations():
             states[row['State']] = State(int(row['Population']))
 
 def LoadCovidTracking():
+    global latest, states
+
     resp = requests.get('https://covidtracking.com/api/states/daily')
     for row in resp.json():
         ts = datetime.datetime.fromisoformat(row['dateChecked'][:-1])
@@ -92,11 +95,43 @@ def LoadCovidTracking():
                 row['hospitalized'],
                 row['death'],
         )
+        latest = max(latest, ts)
+
+def SumTotal():
+    total = State(0)
+    positive = 0
+    negative = 0
+    pending = 0
+    hospitalized = 0
+    dead = 0
+
+    for state in states.values():
+        total.Population += state.Population
+        snap = state.Snapshots[state.Latest()]
+        positive += snap.Positive
+        negative += snap.Negative
+        pending += snap.Pending
+        hospitalized += snap.Hospitalized
+        dead += snap.Dead
+
+    total.AddSnapshot(
+            latest,
+            positive,
+            negative,
+            pending,
+            hospitalized,
+            dead,
+    )
+    states['ΣΣ'] = total
+
+def PrintStates():
+    for code, state in sorted(states.items(), key=lambda x: x[1].Population):
+        print(f'{code}  {state}')
+
 
 LoadPopulations()
 LoadCovidTracking()
-
-for code, state in sorted(states.items(), key=lambda x: x[1].Population):
-    print(f'{code}  {state}')
+SumTotal()
+PrintStates()
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
