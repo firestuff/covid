@@ -128,10 +128,31 @@ def PrintStates():
     for code, state in sorted(states.items(), key=lambda x: x[1].Population):
         print(f'{code}  {state}')
 
+def ExtrapolateWorstPPM():
+    worst = max(states.items(), key=lambda x: x[1].PositivePerMillion())
+    ppm = worst[1].PositivePerMillion()
+    print(f'Extrapolating worst {ppm}=ppm (from {worst[0]}) gives {round(states["ΣΣ"].Population * ppm / 1000000)} infected')
+
+def ExtrapolateWorstHPM():
+    worst = max(states.items(), key=lambda x: x[1].HospitalizedPerMillion())
+    hpm = worst[1].HospitalizedPerMillion()
+    print(f'Extrapolating worst {hpm}=hpm (from {worst[0]}) gives {round(states["ΣΣ"].Population * hpm / 1000000)} hospitalized')
+
+def ExtrapolateWorstDPM():
+    worst = max(states.items(), key=lambda x: x[1].DeadPerMillion())
+    dpm = worst[1].DeadPerMillion()
+    print(f'Extrapolating worst {dpm}=dpm (from {worst[0]}) gives {round(states["ΣΣ"].Population * dpm / 1000000)} dead')
+
 
 LoadPopulations()
 LoadCovidTracking()
 SumTotal()
 PrintStates()
+
+print()
+
+ExtrapolateWorstPPM()
+ExtrapolateWorstHPM()
+ExtrapolateWorstDPM()
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
